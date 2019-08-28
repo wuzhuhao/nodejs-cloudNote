@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Bootstrap 导航栏实例</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../res/bootstrap4.0/css/bootstrap.min.css">
+    <script src="../res/static/js/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/popper.js/1.12.5/umd/popper.min.js"></script>
+    <script src="../res/bootstrap4.0/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="../res/layui/css/layui.css">
+    <link rel="stylesheet" href="../res/static/css/mian.css">
+</head>
+
+<body>
+    <!--导航栏-->
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark">
+        <div class="container">
+            <!--导航栏logo-->
+            <a class="navbar-brand" href="#">云笔记</a>
+            <!--导航栏鲍鱼按钮-->
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+    			<span class="navbar-toggler-icon"></span>
+  			</button>
+            <div class="collapse navbar-collapse navbar-collapse justify-content-end" id="collapsibleNavbar">
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">首页</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+        话题
+      </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="#">话题1</a>
+                            <a class="dropdown-item" href="#">话题2</a>
+                            <a class="dropdown-item" href="#">话题3</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+
+                        <a class="nav-link" href="#">关注话题</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">关于</a>
+                    </li>
+
+                </ul>
+                <!--<a href="" class="btn navbar-btn btn-primary btn-sm navbar-right">报名</a>-->
+                <!--
+<ul class="nav navbar-nav navbar-right">
+    <li>English</li>
+</ul>
+-->
+            </div>
+
+
+        </div>
+    </nav>
+    <br>
+    <div class="container">
+        <h3>折叠导航栏</h3>
+        <p>通常，小屏幕上我们都会折叠导航栏，通过点击来显示导航选项。</p>
+        <p>提示: 如果你删除 .navbar-expand-md 类，导航链接会一直隐藏，且切换按钮会一直显示。</p>
+    </div>
+
+</body>
+
+</html>

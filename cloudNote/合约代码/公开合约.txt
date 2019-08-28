@@ -1,0 +1,252 @@
+pragma solidity ^0.5.1;
+pragma experimental ABIEncoderV2;
+
+//云笔记智能合约
+contract BlockNote{
+    //TODO 设计存储结构
+	struct Note{
+	    string id;
+	    string date;
+	    string title;
+	    string desc;
+	    string content;
+	    uint t_id;
+	    string username;
+	}
+
+	
+	address owner;//合约创建者
+	//判断是否创建者 
+	modifier isOwner{
+	    require(owner==msg.sender);
+	    _;
+	}
+	
+	constructor() public{
+	    owner = msg.sender;
+	}
+	Note[] notes;//笔记数据
+	mapping(uint=>string) types;
+	mapping(string=>uint) ids;//id索引   id-index
+	mapping(string=>string[]) user_ids;//用户索引
+	mapping(uint=>string[]) type_ids;//话题索引
+	uint type_id = 0;
+// 	mapping(uint=>Note) notess;
+	
+// 	mapping(string=>mapping(string=>Note)) typess;
+// 	mapping(string=>string[]) idss;
+	
+	//添加笔记并且进行索引添加
+	function addNote(string memory username,string memory date,string memory id, string memory title,string memory desc,string memory content,uint t_id) public{
+		//查询是不是类型
+		assert(!compareStr(types[t_id],""));
+// 		if(compareStr(types[t_id],"")){
+// 		    return false;
+// 		}
+		Note memory n = Note(id,date,title,desc,content,t_id,username);
+		notes.push(n);
+		ids[id] = notes.length-1;
+		user_ids[username].push(id);
+		type_ids[t_id].push(id);
+// 		return true;
+	}
+	
+	//修改笔记并且进行索引更新
+	function updateNote(string memory username,string memory date,string memory id, string memory title,string memory desc,string memory content,uint t_id) public returns(bool){
+//         if(compareStr(types[t_id],"")){
+// 		    return false;
+// 		}
+// 		assert(!compareStr(types[t_id],""));
+		Note memory n = Note(id,date,title,desc,content,t_id,username);
+        notes[ids[id]] = n;
+		//user索引更新
+	    deleteIndexes(id,user_ids[username]);
+	    user_ids[username].push(id);
+		//type索引更新
+		deleteIndexes(id,type_ids[t_id]);
+		type_ids[t_id].push(id);
+		return true;
+	}
+	
+	function delNote(string memory id,string memory username) public{
+	   // assert(compareStr(notes[ids[id]].username,username));
+	    uint t_id = notes[ids[id]].t_id;
+	    uint temp = ids[id];
+	    //更新ids
+	    for(uint i = ids[id]+1; i<notes.length; i++){
+            if(ids[notes[i].id]>temp){
+                ids[notes[i].id]--;
+            }
+	    }
+	    for (uint i = ids[id]; i<notes.length-1; i++) {
+            notes[i] = notes[i+1];
+        }
+		delete notes[notes.length-1];
+        notes.length--;
+	    //user索引更新
+	    deleteIndexes(id,user_ids[username]);
+		//type索引更新
+		deleteIndexes(id,type_ids[t_id]);
+	}
+	
+	//获取一条笔记详情,string memory
+	function getNote(string memory id) public view returns(Note memory){
+	    assert(compareStr(notes[ids[id]].id,id));
+	   // return (notes[ids[id]],getType(notes[ids[id]].t_id));
+	   return notes[ids[id]];
+	}
+	
+// 	function findList() public view returns(string[] memory){
+// 	    string[] memory type_valuess= new string[](getLength());
+// 	    for(uint i=0;i<getLength();i++){
+// 	        type_valuess[i] = getType(i);
+// 	    }
+// 	    return type_valuess;
+// 	}
+// 	function jj(uint count) public view returns(string memory){
+// 	    // 	    string[] memory type_valuess= new string[](getLength());
+// // 	    for(uint i=0;i<getLength();i++){
+// // 	        type_valuess[i] = getType(i);
+// // 	    }
+// // 	    return type_valuess;
+// 	}
+	
+	
+// 	function getLength() view public returns(uint){
+// 	    return type_id;
+// 	}
+	
+	//getType
+	function getType(uint t_id) public view returns(string memory,uint){
+	    return (types[t_id],type_id);
+	}
+// 	function getTypeId() public view returns (uint){
+//         return type_id;
+//     }
+	
+	function addType(string memory typeValues) isOwner public{
+	    type_id = type_id+1;
+	    types[type_id] = typeValues;
+	   // type_ids[type_id] = new string[];
+	}
+	
+	function checkTypeValuse(uint t_id,string memory typeValues) public view returns(bool){
+	    bool flag = false;
+	    for(uint i=1;i<=type_id;i++){
+	        if(t_id!=0){
+	            if(t_id!=i){
+	                if(compareStr(types[i],typeValues)){
+        	            flag = true;
+        	            break;
+        	        }
+	            }
+	        }else{
+	            if(compareStr(types[i],typeValues)){
+    	            flag = true;
+    	            break;
+    	        }
+	        }
+	    }
+	    return flag;
+	}
+	
+	function delType(uint t_id) isOwner public{
+	    //
+	    delete types[t_id];
+	    for(uint i=0;i<type_ids[t_id].length;i++){
+	        string memory id = type_ids[t_id][i];
+	        uint n_index = ids[id];
+	        string memory name = notes[n_index].username;
+	        delNote(id,name);
+	    }
+	    delete type_ids[t_id];
+	}
+	
+	
+	function updateType(uint t_id,string memory typeValues) isOwner public{
+	    if(checkTypeValuse(t_id,typeValues)){
+	        return;
+	    }
+	    types[t_id] = typeValues;
+	}
+	
+	//删除索引
+	function deleteIndexes(string memory id,string[] storage list) internal{
+	    uint temp;
+        uint len = list.length;
+        for (uint i = 0; i<list.length; i++) {
+            if(compareStr(id,list[i])){
+                temp = i;
+                break;
+            }
+        }
+        if (temp >= len) return;
+        for (uint i = temp; i<len-1; i++) {
+            list[i] = list[i+1];
+        }
+        delete list[len-1];
+        list.length--;
+    }
+    
+    //
+// 	function getNoteByType_(uint t_id) public view returns (Note[] memory){
+// 	   // assert(type_ids[t_id].length!=0);
+// 	    Note[] memory noteList = new Note[](type_ids[t_id].length);
+// 	    uint len = type_ids[t_id].length;
+// 	    for(uint i=0;i<len;i++){
+// 	        string memory id_ = type_ids[t_id][i];
+// 	        Note memory n = getNote(id_);
+// 	        noteList[len-1-i] = n;
+// 	    }
+// 	    return noteList;
+// 	}
+	
+// 	function getNoteByUser(string memory username) public view returns (Note memory,Note[] memory){
+// 	   // assert(user_ids[username].length!=0);
+// 	    Note[] memory noteLists = new Note[](user_ids[username].length);
+// 	    uint len = user_ids[username].length;
+// 	    for(uint i=0;i<len;i++){
+// 	       // if(compareStr(notes[i].username,username)){
+	            
+// 	       // }
+// 	        string memory id_ = getUser_id(username,i);
+// 	        Note memory n = getNote(id_);
+// 	       // return n;
+// 	        noteLists[len-1-i] = n;
+// 	    }
+// 	    return (noteLists[len-1],noteLists);
+// 	   // return noteLists;
+// 	}
+
+    function getUser_id(string memory username) public view returns (string[] memory){
+        return user_ids[username];
+    }
+    
+    function getType_ids(uint t_id) public view returns (string[] memory){
+        return type_ids[t_id];
+    }
+    
+	
+	function getIndex(string memory id_) view private returns(uint){
+	    return ids[id_];
+	}
+	
+	function getUser_id(string memory username,uint index) view private returns(string memory){
+	    return user_ids[username][index];
+	}
+	
+	function getNote_private(string memory id_) view private returns(Note memory){
+	    assert(compareStr(notes[ids[id_]].id,id_));
+	    return notes[ids[id_]];
+	}
+    // 函数中直接判断
+    function compareStr (string memory a,string memory b) private view returns(bool) {
+        bool checkResult = false;
+        if(keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b))) {
+            // 如果二者相等，使checkResult为true
+            checkResult = true;
+        }
+        // 返回checkResult
+        return checkResult;
+    }
+}

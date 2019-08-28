@@ -1,0 +1,183 @@
+pragma solidity ^0.5.1;
+pragma experimental ABIEncoderV2;
+
+//云笔记智能合约
+contract privateBlockNote{
+    //TODO 设计存储结构
+	struct Note{
+	    string id;
+	    string date;
+	    string title;
+	    string desc;
+	    string content;
+	}
+
+	
+	address owner;//合约创建者
+	//判断是否创建者 
+	modifier isOwner{
+	    require(owner==msg.sender);
+	    _;
+	}
+	
+	constructor() public{
+	    owner = msg.sender;
+	}
+	Note[] notes;//笔记数据
+	mapping(string=>uint) ids;//id索引   id-index
+	uint[] typeList;
+	string[] idsList;
+	
+	//添加笔记并且进行索引添加
+	function addNote(string memory date,string memory id, string memory title,string memory desc,string memory content) isOwner public{
+// 		查询是不是类型
+// 		assert(!compareStr(types[t_id],""));
+		Note memory n = Note(id,date,title,desc,content);
+		notes.push(n);
+		ids[id] = notes.length-1;
+		idsList.push(id);
+// 		return true;
+	}
+	
+	//修改笔记并且进行索引更新
+	function updateNote(string memory date,string memory id, string memory title,string memory desc,string memory content) public isOwner returns(bool){
+		Note memory n = Note(id,date,title,desc,content);
+        // notes[ids[id]] = n;
+        uint temp = ids[id];
+        deleteIndexes(id,idsList);
+        idsList.push(id);
+	    //更新ids
+	    for(uint i = ids[id]+1; i<notes.length; i++){
+            if(ids[notes[i].id]>temp){
+                ids[notes[i].id]--;
+            }
+	    }
+	    for (uint i = ids[id]; i<notes.length-1; i++) {
+            notes[i] = notes[i+1];
+        }
+        notes[notes.length-1] = n;
+		return true;
+	}
+	
+	function delNote(string memory id) isOwner public{
+	   // uint t_id = notes[ids[id]].t_id;
+	    uint temp = ids[id];
+	    deleteIndexes(id,idsList);
+	    //更新ids
+	    for(uint i = ids[id]+1; i<notes.length; i++){
+            if(ids[notes[i].id]>temp){
+                ids[notes[i].id]--;
+            }
+	    }
+	    for (uint i = ids[id]; i<notes.length-1; i++) {
+            notes[i] = notes[i+1];
+        }
+		delete notes[notes.length-1];
+        notes.length--;
+	}
+	
+	//获取一条笔记详情,string memory
+	function getNote(string memory id) public view isOwner returns(Note memory){
+	    assert(compareStr(notes[ids[id]].id,id));
+	   // return (notes[ids[id]],getType(notes[ids[id]].t_id));
+	   return notes[ids[id]];
+	}
+	
+	function getNoteByIndex(uint index) public view isOwner returns(Note memory){
+	   // assert(compareStr(notes[ids[id]].id,id));
+	   // if(index>=getLength()){
+	        
+	   // }
+	   // return (notes[ids[id]],getType(notes[ids[id]].t_id));
+	   return notes[index];
+	}
+	
+	function getIdsList() public view isOwner returns(string[] memory){
+	    return idsList;
+	}
+	
+// 	function getList(uint start,uint end) public view returns(Note[] memory){
+// 	    if(start>=notes.length){
+// 	        return new Note[](0);
+// 	    }
+// 	    if(end>=notes.length){
+//     	   end = notes.length-1;
+//     	}
+//     	if(start>end){
+//     	   return new Note[](0);
+//     	}
+    	
+//     // 	Note[] memory noteList = new Note[]((end+1-start));
+//     // // 	uint j=0;
+//     // 	for(uint i=end;i>=start;i--){
+// 	   //     Note memory n = notes[i];
+//     // 	    noteList[0] = n;
+//     // 	   // j++;
+//     // 	}
+//     	return notes;
+// 	}
+	
+	function getLength() view isOwner public returns(uint){
+	    return notes.length;
+	}
+	
+	//删除索引
+	function deleteIndexes(string memory id,string[] storage list) internal{
+	    uint temp;
+        uint len = list.length;
+        for (uint i = 0; i<list.length; i++) {
+            if(compareStr(id,list[i])){
+                temp = i;
+                break;
+            }
+        }
+        if (temp >= len) return;
+        for (uint i = temp; i<len-1; i++) {
+            list[i] = list[i+1];
+        }
+        delete list[len-1];
+        list.length--;
+    }
+
+	function getIndex(string memory id_) view private returns(uint){
+	    return ids[id_];
+	}
+	
+	function addTypeList(uint t_id) isOwner public{
+	    typeList.push(t_id);
+	}
+	
+	function delTypeList(uint t_id) isOwner public{
+	    uint temp;
+	    for(uint i=0;i<typeList.length;i++){
+	        if(typeList[i]==t_id){
+	            temp=i;
+	            for (uint j = temp; i<typeList.length-1; j++) {
+                    typeList[j] = typeList[j+1];
+                }
+        		delete typeList[typeList.length-1];
+        		typeList.length--;
+	            break;
+	        }
+	    }
+	}
+	
+	function getTypeList() public isOwner view returns(uint[] memory){
+	    return typeList;
+	}
+	
+	function getTypeList1() public isOwner view returns(uint[] memory){
+	    return typeList;
+	}
+	
+    // 函数中直接判断
+    function compareStr (string memory a,string memory b) private view returns(bool) {
+        bool checkResult = false;
+        if(keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b))) {
+            // 如果二者相等，使checkResult为true
+            checkResult = true;
+        }
+        // 返回checkResult
+        return checkResult;
+    }
+}
